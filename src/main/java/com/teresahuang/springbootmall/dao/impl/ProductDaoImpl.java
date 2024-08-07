@@ -25,15 +25,7 @@ public class ProductDaoImpl implements ProductDao {
         String sql = "SELECT count(*) FROM product WHERE 1=1";
 
         Map<String, Object> map = new HashMap<>();
-        //Filtering
-        if(productQueryParams.getCategory()!=null){
-            sql=sql+" AND category=:category";
-            map.put("category", productQueryParams.getCategory().name());
-        }
-        if(productQueryParams.getSearch() != null){
-            sql=sql+" AND product_name LIKE :search";
-            map.put("search", "%"+productQueryParams.getSearch()+"%");
-        }
+        sql = addFilteringSql(sql, map, productQueryParams);
 
         Integer total = namedParameterJdbcTemplate.queryForObject(sql,map,Integer.class);
         return total;
@@ -44,17 +36,10 @@ public class ProductDaoImpl implements ProductDao {
         String sql = "SELECT product_id, product_name, category, image_url, price, stock, description, " +
                 "created_date, last_modified_date " +
                 "FROM product WHERE 1=1";
-        Map<String, Object> map = new HashMap<>();
 
-        //Filtering
-        if(productQueryParams.getCategory()!=null){
-            sql=sql+" AND category=:category";
-            map.put("category", productQueryParams.getCategory().name());
-        }
-        if(productQueryParams.getSearch() != null){
-            sql=sql+" AND product_name LIKE :search";
-            map.put("search", "%"+productQueryParams.getSearch()+"%");
-        }
+        Map<String, Object> map = new HashMap<>();
+        sql = addFilteringSql(sql, map, productQueryParams);
+
         //Sorting
         sql=sql+" ORDER BY "+productQueryParams.getOrderBy()+" "+productQueryParams.getSort();
 
@@ -133,5 +118,18 @@ public class ProductDaoImpl implements ProductDao {
         Map<String, Object> map = new HashMap<>();
         map.put("productId", productId);
         namedParameterJdbcTemplate.update(sql,map);
+    }
+
+    private String addFilteringSql(String sql, Map<String,Object> map, ProductQueryParams productQueryParams ){
+        //Filtering
+        if(productQueryParams.getCategory()!=null){
+            sql=sql+" AND category=:category";
+            map.put("category", productQueryParams.getCategory().name());
+        }
+        if(productQueryParams.getSearch() != null){
+            sql=sql+" AND product_name LIKE :search";
+            map.put("search", "%"+productQueryParams.getSearch()+"%");
+        }
+        return sql;
     }
 }
