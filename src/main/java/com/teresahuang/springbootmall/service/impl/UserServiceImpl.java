@@ -1,6 +1,7 @@
 package com.teresahuang.springbootmall.service.impl;
 
 import com.teresahuang.springbootmall.dao.UserDao;
+import com.teresahuang.springbootmall.dto.UserLoginRequest;
 import com.teresahuang.springbootmall.dto.UserRegisterRequest;
 import com.teresahuang.springbootmall.model.User;
 import com.teresahuang.springbootmall.service.UserService;
@@ -34,5 +35,20 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserById(Integer userId) {
         return userDao.getUserById(userId);
+    }
+
+    @Override
+    public User login(UserLoginRequest userLoginRequest) {
+        User user = userDao.getUserByEmail(userLoginRequest.getEmail());
+        if(user==null){
+            log.warn("Email: {} is not registered.", userLoginRequest.getEmail());
+            throw  new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+        if(user.getPassword().equals(userLoginRequest.getPassword())){
+            return user;
+        }else{
+            log.warn("{} password does not match.", userLoginRequest.getEmail());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
     }
 }
