@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 @Component
@@ -28,6 +29,10 @@ public class UserServiceImpl implements UserService {
             log.warn("Email: {} has already been registered.", userRegisterRequest.getEmail());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
+        //Generate an MD5 hash value for the password
+        String hashedPassword = DigestUtils.md5DigestAsHex(userRegisterRequest.getPassword().getBytes());
+        userRegisterRequest.setPassword(hashedPassword);
+
         //Create User
         return userDao.createUser(userRegisterRequest);
     }
@@ -40,11 +45,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public User login(UserLoginRequest userLoginRequest) {
         User user = userDao.getUserByEmail(userLoginRequest.getEmail());
+        //Check if user exists
         if(user==null){
             log.warn("Email: {} is not registered.", userLoginRequest.getEmail());
             throw  new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
-        if(user.getPassword().equals(userLoginRequest.getPassword())){
+
+        //Generate an MD5 hash value
+        String hashedPassword = DigestUtils.md5DigestAsHex(userLoginRequest.getPassword().getBytes());
+        userLoginRequest.setPassword(hashedPassword);
+
+        //Check if the password matches
+        if(user.getPassword().equals(hashedPassword)){
             return user;
         }else{
             log.warn("{} password does not match.", userLoginRequest.getEmail());
